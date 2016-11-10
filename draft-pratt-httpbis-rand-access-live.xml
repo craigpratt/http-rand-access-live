@@ -342,18 +342,33 @@
 						Content-Range: bytes 1000000-1234567/*
 					</t>
 				</list>
-				and a GET request containing
+				indicating that the first 1000000 bytes were not accessible at the time the HEAD request was processed. Subsequent HEAD requests could return:
+				<list>
+					<t>
+						Content-Range: bytes 1000000-1234567/*
+					</t>
+					<t>
+						Content-Range: bytes 1010000-1244567/*
+					</t>
+					<t>
+						Content-Range: bytes 1020000-1254567/*
+					</t>
+				</list>
+				Note though that the difference between the first-byte-pos and last-byte-pos need not be constant.
+			</t>
+			<t>
+				The Client could then follow-up with a GET request containing
 				<list>
 					<t>Range: bytes=1020000-999999999999</t>
 				</list>
 	
-				could return
+				with the Server returning
 	
 				<list>
 					<t>Content-Range: bytes 1020000-999999999999/*</t>
 				</list>
 		
-				with the response body returning bytes 1020000-1234567 immediately and aggregated ("live") data being returned indefinitely as the content is aggregated.
+				with the response body returning bytes 1020000-1254567 immediately and aggregated ("live") data being returned as the content is aggregated.
 			</t>
 	    </section>
     </section>
