@@ -1,9 +1,9 @@
-# HTTP bytes-live Range Unit for Live Content
+# HTTP Random Access Live
 
 This is the working area for the Individual internet-draft, "HTTP bytes-live Range Unit for Live Content".
 
-* [Editor's copy](https://darshakthakore.github.io/http-bytes-live-unit/)
-* [Individual Draft] (https://tools.ietf.org/html/draft-pratt-httpbis-bytes-live-range-unit)
+* [Editor's copy](https://craigpratt.github.io/http-rand-access-live/)
+* [Individual Draft] (https://tools.ietf.org/html/draft-pratt-http-rand-access-live)
 
 
 ## Building the Draft
