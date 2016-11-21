@@ -73,13 +73,12 @@
         <organization abbrev="CableLabs">CableLabs</organization>
         <address>
             <postal>
-                <street></street>
-                <city>Portland</city>
-                <region>OR</region>
-                <code>97229</code>
-                <country>US</country>
+                <street>858 Coal Creek Circle</street>
+                <city>Louisville</city>
+                <region>CO</region>
+                <code>80027</code>
             </postal>
-        <email>craig@ecaspia.com</email>
+        <email>pratt@acm.org</email>
         </address>
     </author>
     
@@ -161,12 +160,12 @@
     
     <section anchor="introduction" title="Introduction">
         <t>
-             Some Hypertext Transfer Protocol (HTTP) Clients use byte-range requests (Range requests using the "bytes" Range Unit) to transfer select portions of large representations. And in some cases large representations require content to be continuously or periodically appended - such as representations consisting of live audio or video sources, blockchain databases, and log files. Clients cannot access the appended/live content using a Range request with the bytes range unit using the currently defined byte-range semantics accepting performance or behavior sacrifices which are not acceptable for many applications.
+             Some Hypertext Transfer Protocol (HTTP) Clients use byte-range requests (Range requests using the "bytes" Range Unit) to transfer select portions of large representations. And in some cases large representations require content to be continuously or periodically appended - such as representations consisting of live audio or video sources, blockchain databases, and log files. Clients cannot access the appended/live content using a Range request with the bytes range unit using the currently defined byte-range semantics without accepting performance or behavior sacrifices which are not acceptable for many applications.
         </t>
         <t>
 			For instance, HTTP Clients have the ability to access appended content by simply transferring the entire accessible portion of the representation from the beginning and continuing to read the appended content as it's made available. Obviously, this is highly inefficient for cases where the representation is large and only a portion of the randomly accessible content is needed by the Client. And when bandwidth is limited, the client may never "catch up" with the appending content.
 		</t>
-		<t>Clients can also attempt to access appended content by sending periodic bytes Range requests using the last-known end byte position. Performing periodic bytes Range requests in this fashion (polling) introduces latency since the Client will necessarily be somewhat behind the aggregated content - mimicking the behavior (and latency) of segmented content representations such as HLS or MPEG-DASH. And performing these Range requests at higher frequency incurs more processing overhead and HTTP traffic as the periodic requests will often return no content - since content is usually aggregated in groups of bytes (e.g. a video frame, audio sample, block, or log entry).
+		<t>Clients can also attempt to access appended content by sending periodic bytes Range requests using the last-known end byte position (polling). Performing low-frequency periodic bytes Range requests in this fashion (polling) introduces latency since the Client will necessarily be somewhat behind the aggregated content - mimicking the behavior (and latency) of segmented content representations such as HLS or MPEG-DASH. And performing these Range requests at higher frequency incurs more processing overhead and HTTP traffic as the periodic requests will often return no content - since content is usually aggregated in groups of bytes (e.g. a video frame, audio sample, block, or log entry).
         </t>
         <t>
            To accommodate byte-range requests on large representations which have data appended over time efficiently and with low latency, this recommendation defines semantics whereby the HTTP Client performs byte-range requests using a combination of open-ended byte-range HEAD requests and GET requests using "Large Value" last-byte-pos values.
@@ -188,7 +187,7 @@
 			
 	    <section anchor="establishing-range" title="Establishing the Randomly Accessible Byte Range">       
 			<t>
-				Establishing if a representation is continuously aggregating ("live") and determining the randomly accessible byte range can be performed using the existing definition for an open-ended byte-range request. Specifically, <xref target="RFC7233"></xref> defines:
+				Establishing if a representation is continuously aggregating ("live") and determining the randomly accessible byte range can both be determined using the existing definition for an open-ended byte-range request. Specifically, <xref target="RFC7233"></xref> defines a byte-range request of the form:
 			
 			<list>
 				<t>
@@ -196,7 +195,7 @@
 				</t>
 			</list>
 			
-			which allows a Client to send a request with a first-byte-pos and leave last-byte-pos absent. A Server that receives a satisfiable byte-range request (with first-byte-pos smaller than the current representation length) must respond with a 206 status code (Partial Content) with a Content-Range header indicating the satisfiable byte range(s). For example, a Client-issued HEAD request against a continuously aggregating representation hosted on a Server could contain a byte-range header of the form:
+			which allows a Client to send a request with a first-byte-pos and leave last-byte-pos absent. A Server that receives a satisfiable byte-range request (with first-byte-pos smaller than the current representation length) must respond with a 206 status code (Partial Content) with a Content-Range header indicating the currently satisfiable byte range. For example, a Client-issued HEAD request performed against a continuously aggregating representation hosted on a Server could contain a byte-range header of the form:
 			
 			<list>
 				<t>
@@ -248,7 +247,7 @@
 		</section>
 	    <section anchor="live-range-responses" title="Byte-Range Responses Beyond the Randomly Accessible Byte Range">
 			<t>
-				A Server can indicate that it's supplying an continuously aggregating ("live") response by supplying the Client request's last-byte-pos in the Content-Range response header. 
+				A Server may indicate that it is supplying an continuously aggregating ("live") response by supplying the Client request's last-byte-pos in the Content-Range response header. 
 			</t>
 			<t>
 				For example:
@@ -265,7 +264,7 @@
 				from the Server to indicate that the response will start at byte 1230000 and continues indefinitely to include all aggregated content, as it becomes available.
 			</t>
 			<t>
-				A Server that doesn't support or supply a continuously aggregating ("live") response can supply a value other than the Client request's last-byte-pos in the Content-Range response header.
+				A Server that doesn't support or supply a continuously aggregating ("live") response should supply the currently satisfiable byte range, as it would with an open-ended byte request.
 			</t>
 			<t>
 				For example:
