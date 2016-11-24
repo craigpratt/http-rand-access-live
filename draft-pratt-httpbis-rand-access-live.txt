@@ -5,10 +5,10 @@
 Hypertext Transfer Protocol                                     C. Pratt
 Internet-Draft                                                 CableLabs
 Intended status: Informational                                  B. Stark
-Expires: May 25, 2017                                               AT&T
+Expires: April 4, 2017                                              AT&T
                                                               D. Thakore
                                                                CableLabs
-                                                       November 21, 2016
+                                                            October 2016
 
 
                   HTTP Random Access and Live Content
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on May 25, 2017.
+   This Internet-Draft will expire on April 4, 2017.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 1]
+Pratt, et al.             Expires April 4, 2017                 [Page 1]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -95,11 +95,11 @@ Table of Contents
    select portions of large representations.  And in some cases large
    representations require content to be continuously or periodically
    appended - such as representations consisting of live audio or video
-   sources, blockchain databases, and log files.  Clients cannot access
-   the appended/live content using a Range request with the bytes range
-   unit using the currently defined byte-range semantics without
-   accepting performance or behavior sacrifices which are not acceptable
-   for many applications.
+   sources, simple log files, blockchain databases, and certificate log
+   files [RFC6962].  Clients cannot access the appended/live content
+   using a Range request with the bytes range unit using the currently
+   defined byte-range semantics accepting performance or behavior
+   sacrifices which are not acceptable for many applications.
 
    For instance, HTTP Clients have the ability to access appended
    content by simply transferring the entire accessible portion of the
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 2]
+Pratt, et al.             Expires April 4, 2017                 [Page 2]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
    portion of the randomly accessible content is needed by the Client.
@@ -119,22 +119,24 @@ Internet-Draft            http-rand-access-live            November 2016
    the appending content.
 
    Clients can also attempt to access appended content by sending
-   periodic bytes Range requests using the last-known end byte position
-   (polling).  Performing low-frequency periodic bytes Range requests in
-   this fashion (polling) introduces latency since the Client will
-   necessarily be somewhat behind the aggregated content - mimicking the
-   behavior (and latency) of segmented content representations such as
-   HLS or MPEG-DASH.  And performing these Range requests at higher
-   frequency incurs more processing overhead and HTTP traffic as the
-   periodic requests will often return no content - since content is
-   usually aggregated in groups of bytes (e.g. a video frame, audio
-   sample, block, or log entry).
+   periodic bytes Range requests using the last-known end byte position.
+   Performing periodic bytes Range requests in this fashion (polling)
+   introduces latency since the Client will necessarily be somewhat
+   behind the aggregated content - mimicking the behavior (and latency)
+   of segmented content representations such as HLS or MPEG-DASH.  And
+   performing these Range requests at higher frequency incurs more
+   processing overhead and HTTP traffic as the periodic requests will
+   often return no content - since content is usually aggregated in
+   groups of bytes (e.g. a video frame, audio sample, block, or log
+   entry).
 
    To accommodate byte-range requests on large representations which
    have data appended over time efficiently and with low latency, this
    recommendation defines semantics whereby the HTTP Client performs
-   byte-range requests using a combination of open-ended byte-range HEAD
-   requests and GET requests using "Large Value" last-byte-pos values.
+   requests using a combination of open-ended byte-range HEAD requests
+   and GET requests using "Large Value" last-byte-pos values.  The
+   response data returned from these requests can include continuously
+   aggregating "live" data efficiently and with very low latency.
 
 2.  Performing Range requests on Random-Access Aggregating ("live")
     Content
@@ -151,29 +153,28 @@ Internet-Draft            http-rand-access-live            November 2016
 2.1.  Establishing the Randomly Accessible Byte Range
 
    Establishing if a representation is continuously aggregating ("live")
-   and determining the randomly accessible byte range can both be
-   determined using the existing definition for an open-ended byte-range
-   request.  Specifically, [RFC7233] defines a byte-range request of the
-   form:
+   and determining the randomly accessible byte range can be performed
+   using the existing definition for an open-ended byte-range request.
+   Specifically, [RFC7233] defines:
 
       byte-range-spec = first-byte-pos "-" [ last-byte-pos ]
 
    which allows a Client to send a request with a first-byte-pos and
    leave last-byte-pos absent.  A Server that receives a satisfiable
    byte-range request (with first-byte-pos smaller than the current
-   representation length) must respond with a 206 status code (Partial
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 3]
+Pratt, et al.             Expires April 4, 2017                 [Page 3]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
-   Content) with a Content-Range header indicating the currently
-   satisfiable byte range.  For example, a Client-issued HEAD request
-   performed against a continuously aggregating representation hosted on
-   a Server could contain a byte-range header of the form:
+   representation length) must respond with a 206 status code (Partial
+   Content) with a Content-Range header indicating the satisfiable byte
+   range(s).  For example, a Client-issued HEAD request against a
+   continuously aggregating representation hosted on a Server could
+   contain a byte-range header of the form:
 
       Range: bytes=0-
 
@@ -220,10 +221,9 @@ Internet-Draft            http-rand-access-live            November 2016
 
 
 
-
-Pratt, et al.             Expires May 25, 2017                  [Page 4]
+Pratt, et al.             Expires April 4, 2017                 [Page 4]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
    last-byte-pos is required in byte-range.  So in order to preserve
@@ -245,9 +245,9 @@ Internet-Draft            http-rand-access-live            November 2016
 
 2.3.  Byte-Range Responses Beyond the Randomly Accessible Byte Range
 
-   A Server may indicate that it is supplying an continuously
-   aggregating ("live") response by supplying the Client request's last-
-   byte-pos in the Content-Range response header.
+   A Server can indicate that it's supplying an continuously aggregating
+   ("live") response by supplying the Client request's last-byte-pos in
+   the Content-Range response header.
 
    For example:
 
@@ -262,8 +262,8 @@ Internet-Draft            http-rand-access-live            November 2016
    as it becomes available.
 
    A Server that doesn't support or supply a continuously aggregating
-   ("live") response should supply the currently satisfiable byte range,
-   as it would with an open-ended byte request.
+   ("live") response can supply a value other than the Client request's
+   last-byte-pos in the Content-Range response header.
 
    For example:
 
@@ -277,9 +277,9 @@ Internet-Draft            http-rand-access-live            November 2016
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 5]
+Pratt, et al.             Expires April 4, 2017                 [Page 5]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
    from the Server to indicate that the response will start at byte
@@ -333,9 +333,9 @@ Internet-Draft            http-rand-access-live            November 2016
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 6]
+Pratt, et al.             Expires April 4, 2017                 [Page 6]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
 3.2.  Shift Buffer Representations
@@ -389,9 +389,9 @@ Internet-Draft            http-rand-access-live            November 2016
 
 
 
-Pratt, et al.             Expires May 25, 2017                  [Page 7]
+Pratt, et al.             Expires April 4, 2017                 [Page 7]
 
-Internet-Draft            http-rand-access-live            November 2016
+Internet-Draft            http-rand-access-live             October 2016
 
 
    that the representation will ever exceed 2^^63, a value smaller than
@@ -401,8 +401,7 @@ Internet-Draft            http-rand-access-live            November 2016
 5.  Acknowledgements
 
    Mark Nottingham, Patrick McManus, Julian Reschke, Remy Lebeau, Rodger
-   Combs, Thorsten Lohmar, Martin Thompson, Adrien de Croy, K.  Morgan,
-   Roy T.  Fielding, Jeremy Poulter
+   Combs, Thorsten Lohmar, Martin Thompson, Adrien de Croy, K.  Morgan
 
 6.  References
 
@@ -434,20 +433,29 @@ Internet-Draft            http-rand-access-live            November 2016
               Specifications: ABNF", RFC 4234, DOI 10.17487/RFC4234,
               October 2005, <http://www.rfc-editor.org/info/rfc4234>.
 
+   [RFC6962]  Laurie, B., Langley, A., and E. Kasper, "Certificate
+              Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
+              <http://www.rfc-editor.org/info/rfc6962>.
+
 Authors' Addresses
+
+
+
+
+
+
+
+Pratt, et al.             Expires April 4, 2017                 [Page 8]
+
+Internet-Draft            http-rand-access-live             October 2016
+
 
    Craig Pratt
    CableLabs
-   858 Coal Creek Circle
-   Louisville, CO  80027
+   Portland, OR  97229
+   US
 
-   Email: pratt@acm.org
-
-
-
-Pratt, et al.             Expires May 25, 2017                  [Page 8]
-
-Internet-Draft            http-rand-access-live            November 2016
+   Email: craig@ecaspia.com
 
 
    Barbara Stark
@@ -493,12 +501,4 @@ Internet-Draft            http-rand-access-live            November 2016
 
 
 
-
-
-
-
-
-
-
-
-Pratt, et al.             Expires May 25, 2017                  [Page 9]
+Pratt, et al.             Expires April 4, 2017                 [Page 9]
